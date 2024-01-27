@@ -9,7 +9,7 @@ export class MongoManager{
 
     async connect(){
         await mongoose.connect('mongodb://127.0.0.1:27017/Code', { dbName: "Code-Data" });
-        // mongoose.connect('mongodb+srv://v:v@cluster0.vytqvwl.mongodb.net/', { dbName: "Code-Data" });
+        // mongoose.connect(`mongodb+srv://${username}:${password}@cluster0.random.mongodb.net/`, { dbName: "Code-Data" });
     }
     async disconnect(){
         await mongoose.disconnect();
@@ -18,7 +18,12 @@ export class MongoManager{
         const newRoom=new this.Room({
             admin,
             roomId,
-            participants: [admin]
+            participants: [admin],
+            files:[{
+                filename:"sample.js",
+                fileType:"js",
+                content:"",
+            }]
         })
         await newRoom.save()
         return newRoom;
@@ -40,12 +45,6 @@ export class MongoManager{
             return {status: true, msg: "File created successfully"};
         }
         return {status: false, msg: "File create error in server"};
-        // const fileType = filename.split(".")[1];
-        // const fileAddSatus = await this.Room.findOneAndUpdate({roomId:roomId}, {"$push": { "files":  filename }})
-        // if(fileAddSatus){
-        //     return true;
-        // }
-        // return false;
     }
     async getFiles(roomId){
         const room = await this.Room.findOne({roomId:roomId})
@@ -54,7 +53,30 @@ export class MongoManager{
         }
         return [];
     }
-    // async addParticipants(){
-
-    // }
+    async getCode(roomId, fileName){
+        const room = await this.Room.findOne({roomId:roomId});
+        if(room){
+            // let content="";
+            // console.log(room.files[11].content);
+            for(var i=0;i<room.files.length;i++){
+                if(room.files[i].filename===fileName){
+                    // console.log('wow');
+                    console.log("hey "+room.files[i].content);
+                    
+                    return room.files[i].content;
+                }
+                // console.log("hey "+room.files[i].content);
+            }
+            
+        }
+        return null;
+    }
+    async storeFile(roomId, filenameToUpdate, newContent){
+        const updatedRoom = await this.Room.findOneAndUpdate(
+            { roomId, 'files.filename': filenameToUpdate },
+            { $set: { 'files.$.content': newContent } },
+            { new: true }
+          );
+        return updatedRoom;
+    }
 }

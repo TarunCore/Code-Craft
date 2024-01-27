@@ -21,7 +21,7 @@ appRouter.post("/room/create",async(req, res)=>{
         const createdRoom = await mongoManager.createRoom(username, randomId);
         return res.send(createdRoom)
     }
-    res.status(401).json({message: "No valid input"})
+    res.status(417).json({message: "No valid input"})
 })
 appRouter.post("/room/join",async(req, res)=>{
     const {roomId, username} = req.body;
@@ -49,6 +49,16 @@ appRouter.post("/room/getfiles",async(req, res)=>{
     }
     res.status(403).json({msg: "No room found"})
 })
+appRouter.post("/room/getcode",async(req, res)=>{
+    const {roomId, filename} = req.body;
+    const code = await mongoManager.getCode(roomId, filename);
+    console.log(code);
+    
+    if(code!=null){
+        return res.send({status:true, code, msg:"success"});
+    }
+    res.status(403).json({status:false, msg: "No room found"})
+})
 appRouter.post("/room/getParticipants",(req, res)=>{
     const {roomId} = req.body;
     const participants = iomanage.getParticipants(roomId);
@@ -56,4 +66,12 @@ appRouter.post("/room/getParticipants",(req, res)=>{
         return res.send({participants, msg:"success"});
     }
     res.status(403).json({msg: "No room found from getParticipants function"})
+})
+appRouter.patch("/room/savefile",async(req, res)=>{
+    const {roomId, filename, content} = req.body;
+    const updatedRoom = await mongoManager.storeFile(roomId, filename, content);
+    if(updatedRoom){
+        return res.send({status:true,msg:"Storing content success"})
+    }
+    res.status(400).json({status:false, msg: "Storing content fail",updatedRoom})
 })

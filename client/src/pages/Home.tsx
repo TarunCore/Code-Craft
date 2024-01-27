@@ -49,11 +49,11 @@ const Home = () => {
         <div>
             <div>
                 <p className='text-2xl text-white'>Join a existing room</p>
-                <input className='basicInput' type="text" placeholder='Enter room id' onChange={(e)=>{
+                <input className='basicInput' type="text" placeholder='Enter room ID' onChange={(e)=>{
                     setRoomId(e.target.value);
                 }}/>
                 <br />
-                <input className='basicInput' type="text" placeholder='Enter name fj' onChange={(e)=>{
+                <input className='basicInput' type="text" placeholder='Enter your name' onChange={(e)=>{
                     setUsernameJoin(e.target.value);
                 }}/>
                 <button className='bg-blue-500 p-2 text-white hover:bg-blue-700 rounded' onClick={handleJoin}>Join</button>

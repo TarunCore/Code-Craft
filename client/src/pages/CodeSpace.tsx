@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import {Editor} from "@monaco-editor/react"
 import * as Y from "yjs"
 import { editor } from "monaco-editor";
@@ -19,7 +19,7 @@ interface File{
 
 function CodeSpace() {
     const [language, setLanguage] = useState<string>("javascript");
-    const [currentFile, setCurrentFile] = useState<string>("none.txt");
+    const [currentFile, setCurrentFile] = useState<string>("sample.js");
     const [addFileName, setAddFileName] = useState<string>("");
 
     // const [savedCode, setSavedCode] = useState<string>("void");
@@ -34,7 +34,7 @@ function CodeSpace() {
   const handleEditorMount =  (editor:editor.IStandaloneCodeEditor)=>{
     editorRef.current = editor;
     const doc = new Y.Doc();
-    const wsProvider = new WebsocketProvider('ws://localhost:1234', id!, doc)
+    const wsProvider = new WebsocketProvider('ws://localhost:1234', id!+"sample.js", doc)
     // wsProvider.on('status', event => {
     //   console.log(event.status) // logs "connected" or "disconnected"
     // })
@@ -42,7 +42,24 @@ function CodeSpace() {
     const binding = new MonacoBinding(txt, editorRef.current.getModel()!, new Set([editorRef.current]), wsProvider.awareness)
     wsProviderRef.current=wsProvider;
   }
-
+//   const saveFile = useCallback(async()=>{
+//     try{
+//         console.log(currentFile);
+        
+//         const resp = await axios.patch(`${BASE_URL}/room/savefile`,{
+//             roomId:id,
+//             filename:currentFile,
+//             content:editorRef.current?.getValue()
+//         })
+//         if(resp.data.status){
+//             // alert(resp.data.msg);
+//         }else{
+//             alert(resp.data.msg);
+//         }
+//     }catch{
+//         console.log("Error in saving file");
+//     }
+//   },[currentFile,id])
   const handleAddFile = async()=>{
     if(addFileName.split(".").length!=2) return;
     try{
@@ -61,22 +78,33 @@ function CodeSpace() {
     }
 
   }
-  const handleFileClick = (fileData: string) =>{
-    wsProviderRef.current?.disconnect();
-    const doc = new Y.Doc();
-    const wsProvider2 = new WebsocketProvider('ws://localhost:1234', id+fileData, doc)
-    // wsProvider.on('status', event => {
-    //   console.log(event.status) // logs "connected" or "disconnected"
-    // })
-    const txt = doc.getText("monaco");
-    const binding = new MonacoBinding(txt, editorRef.current.getModel()!, new Set([editorRef.current]), wsProvider2.awareness)
-    wsProviderRef.current=wsProvider2;
-    setCurrentFile(fileData);
-    setLanguage(LANGUAGE_MAP[fileData.split(".")[1]]);
+  const handleFileClick = async(fileData: string) =>{
+    try{
+        const resp = await axios.post(`${BASE_URL}/room/getcode`,{
+            roomId:id,
+            filename:fileData
+        })
+        if(resp.data.status){
+            wsProviderRef.current?.disconnect();
+            const doc = new Y.Doc();
+            const wsProvider2 = new WebsocketProvider('ws://localhost:1234', id+fileData, doc)
+            const txt = doc.getText("monaco");
+            const binding = new MonacoBinding(txt, editorRef.current.getModel()!, new Set([editorRef.current]), wsProvider2.awareness)
+            wsProviderRef.current=wsProvider2;
+            editorRef.current?.setValue(resp.data.code);
+            setCurrentFile(fileData);
+            setLanguage(LANGUAGE_MAP[fileData.split(".")[1]]);
+        }else{
+            alert(resp.data.msg);
+        }
+    }catch(err){
+        console.log("Error in retrieving file");
+    }
+    
   }
   useEffect(()=>{
     socket.on("participant_join", (roomId:string, username:string, roomParticipants: string[])=>{
-        console.log(roomParticipants);
+        // console.log(roomParticipants);
         
         if(id==roomId){
             // setParticipants(prev=>[...prev, username]);
@@ -96,10 +124,38 @@ function CodeSpace() {
             setFiles(prev=>[...prev, fileName]);
         }
     })
+    // const call = setInterval(()=>{
+    //     saveFile();
+    // },7000);
     return ()=>{
         socket.off("file_add");
+        // clearInterval(call);
     }
   }, [])
+
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      try {
+        console.log(currentFile);
+
+        const resp = await axios.patch(`${BASE_URL}/room/savefile`, {
+          roomId: id,
+          filename: currentFile,
+          content: editorRef.current?.getValue(),
+        });
+
+        if (resp.data.status) {
+          // alert(resp.data.msg);
+        } else {
+          alert(resp.data.msg);
+        }
+      } catch (error) {
+        console.log("Error in saving file", error);
+      }
+    }, 10000); // Adjust the interval as needed
+
+    return () => clearInterval(intervalId); // Cleanup the interval on component unmount
+  }, [currentFile]); // Dependencies for useEffect
   useEffect(()=>{
     async function getFilesAndParticipants(){
         try{
@@ -127,8 +183,12 @@ function CodeSpace() {
 
     getFilesAndParticipants();
   }, [])
+  
+
   if(!user){
-    navigate("/")
+    return <div className='h-full bg-black text-white' onClick={()=>{navigate("/")}}>
+        Go to home
+    </div>
   }
   return (
     <div className='flex h-[90vh]'>
@@ -149,6 +209,7 @@ function CodeSpace() {
                     setAddFileName(e.target.value)  
                 }}/>
                 <button className='text-white text-sm bg-red-600 p-1 ml-2 rounded hover:bg-red-700' onClick={handleAddFile}>Add file</button>
+                <button className='text-white text-sm bg-red-600 p-1 ml-2 rounded hover:bg-red-700' onClick={saveFile}>save file</button>
                 <div className='h-[250px] overflow-auto'>
                 {files.map((file, ind)=>{
                     return <div key={file+ind} className={`p-1 pl-3 cursor-pointer ${file===currentFile? "bg-file-selected":""} hover:bg-file-bg-hover`}  onClick={()=>handleFileClick(file)}>
@@ -160,7 +221,9 @@ function CodeSpace() {
             <div className=''>
                 <span className='text-white'>Participants</span>
                 {participants.map((participant, ind)=>{
-                    return <p className='text-blue-600' key={participant+ind}>{(ind+1)+participant}</p>
+                    return <div className='border border-blue-500 rounded m-4 p-2' key={participant+ind}>
+                        <p className='text-blue-300'>{(ind+1)+participant}</p>
+                    </div>
                 })}
             </div>
         </div>

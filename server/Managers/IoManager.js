@@ -16,7 +16,8 @@ export class IoManager{
                 this.io.emit("file_add", roomId, filename)
             })
             socket.on("disconnect",(reason)=>{
-                // remove from room
+                // when window is closed and not for disconnect button
+                // create a new event for disconnect button and emit the event to server
             })
         })
     }
@@ -34,6 +35,8 @@ export class IoManager{
     }
     addFileEmit(roomId){
         // this.io.emit("file_add", roomId)
+
+        // socket is emitting from client side. SO HERE NO need
     }
     getIo(){
         return this.io;
