@@ -6,7 +6,7 @@ import { WebsocketProvider } from 'y-websocket'
 import {MonacoBinding} from "y-monaco"
 import { SocketContext } from '../context/SocketContext';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BASE_URL, LANGUAGE_MAP } from '../constants';
+import { BASE_URL, BASE_WS_URL, LANGUAGE_MAP } from '../constants';
 import axios from 'axios';
 import { useRecoilValue } from 'recoil';
 import { userState } from '../atoms/user';
@@ -34,7 +34,7 @@ function CodeSpace() {
   const handleEditorMount =  (editor:editor.IStandaloneCodeEditor)=>{
     editorRef.current = editor;
     const doc = new Y.Doc();
-    const wsProvider = new WebsocketProvider('ws://localhost:1234', id!+"sample.js", doc)
+    const wsProvider = new WebsocketProvider(BASE_WS_URL, id!+"sample.js", doc)
     // wsProvider.on('status', event => {
     //   console.log(event.status) // logs "connected" or "disconnected"
     // })
@@ -42,24 +42,24 @@ function CodeSpace() {
     const binding = new MonacoBinding(txt, editorRef.current.getModel()!, new Set([editorRef.current]), wsProvider.awareness)
     wsProviderRef.current=wsProvider;
   }
-//   const saveFile = useCallback(async()=>{
-//     try{
-//         console.log(currentFile);
+  const saveFile = useCallback(async()=>{
+    try{
+        console.log(currentFile);
         
-//         const resp = await axios.patch(`${BASE_URL}/room/savefile`,{
-//             roomId:id,
-//             filename:currentFile,
-//             content:editorRef.current?.getValue()
-//         })
-//         if(resp.data.status){
-//             // alert(resp.data.msg);
-//         }else{
-//             alert(resp.data.msg);
-//         }
-//     }catch{
-//         console.log("Error in saving file");
-//     }
-//   },[currentFile,id])
+        const resp = await axios.patch(`${BASE_URL}/room/savefile`,{
+            roomId:id,
+            filename:currentFile,
+            content:editorRef.current?.getValue()
+        })
+        if(resp.data.status){
+            // alert(resp.data.msg);
+        }else{
+            alert(resp.data.msg);
+        }
+    }catch{
+        console.log("Error in saving file");
+    }
+  },[currentFile,id])
   const handleAddFile = async()=>{
     if(addFileName.split(".").length!=2) return;
     try{
@@ -87,9 +87,9 @@ function CodeSpace() {
         if(resp.data.status){
             wsProviderRef.current?.disconnect();
             const doc = new Y.Doc();
-            const wsProvider2 = new WebsocketProvider('ws://localhost:1234', id+fileData, doc)
+            const wsProvider2 = new WebsocketProvider(BASE_WS_URL, id+fileData, doc)
             const txt = doc.getText("monaco");
-            const binding = new MonacoBinding(txt, editorRef.current.getModel()!, new Set([editorRef.current]), wsProvider2.awareness)
+            const binding = new MonacoBinding(txt, editorRef.current!.getModel()!, new Set([editorRef.current!]), wsProvider2.awareness)
             wsProviderRef.current=wsProvider2;
             editorRef.current?.setValue(resp.data.code);
             setCurrentFile(fileData);
@@ -121,6 +121,8 @@ function CodeSpace() {
         
         if(id==roomId){
             // setParticipants(prev=>[...prev, username]);
+            console.log("this is caclled");
+            
             setFiles(prev=>[...prev, fileName]);
         }
     })
@@ -186,8 +188,8 @@ function CodeSpace() {
   
 
   if(!user){
-    return <div className='h-full bg-black text-white' onClick={()=>{navigate("/")}}>
-        Go to home
+    return <div className='h-[90vh] bg-black text-white text-xl text-center'>
+        <button className='bg-blue-500 p-2 text-white text-sm hover:bg-blue-700 rounded' onClick={()=>{navigate("/")}}>Join a room</button>
     </div>
   }
   return (

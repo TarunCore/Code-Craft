@@ -42,13 +42,16 @@ const Home = () => {
         }
     }
   return (
-    <header className='flex w-[100%] h-[90vh] items-center bg-[#242424]'>
-        <div className='w-[65%]'>
-            <img src={HomeImg} style={{width:"60%", marginLeft:"50px"}} alt="" />
+    <header className='flex w-[100%] min-h-[90vh] items-center bg-[#242424]'>
+        <div className='lg:w-[65%]'>
+            <img src={HomeImg} className='w-[60%] ml-12 hidden lg:inline-block' alt="" />
         </div>
-        <div>
+        <div className='m-7'>
+            <p className='font-poppins text-3xl text-white'>Realtime collaborative Code Editor</p>
+            <p className='font-poppins text-2xl text-gray-300'>Sync code across devices</p>
+            <br />
             <div>
-                <p className='text-2xl text-white'>Join a existing room</p>
+                <p className='text-xl text-white'>Join a existing room</p>
                 <input className='basicInput' type="text" placeholder='Enter room ID' onChange={(e)=>{
                     setRoomId(e.target.value);
                 }}/>
@@ -60,7 +63,7 @@ const Home = () => {
                 
             </div>
             <br />
-            <p className='text-2xl text-white'>Create a new room</p>
+            <p className='text-xl text-white'>Create a new room</p>
             <div>
                 <input className='basicInput' type="text" placeholder='Enter your name' onChange={(e)=>{
                     setUsername(e.target.value);
