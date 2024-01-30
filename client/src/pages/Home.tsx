@@ -23,7 +23,7 @@ const Home = () => {
                 // navigate("/room/"+resp.data.roomId)
             }
         }catch(err){
-            alert(err)
+            alert("Error in creating room")
             console.log("Error in creating room");
         }
     }

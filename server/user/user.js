@@ -30,7 +30,7 @@ appRouter.post("/room/join",async(req, res)=>{
         iomanage.joinRoomEmit(roomId, username);
         return res.send(room);
     }
-    res.status(403).json({message: "No room found"})
+    res.status(400).json({message: "No room found"})
 })
 appRouter.post("/room/addfile",async(req, res)=>{
     const {roomId, filename} = req.body;
@@ -65,7 +65,7 @@ appRouter.post("/room/getParticipants",(req, res)=>{
     if(participants){
         return res.send({participants, msg:"success"});
     }
-    res.status(403).json({msg: "No room found from getParticipants function"})
+    res.status(400).json({msg: "No room found from getParticipants function"})
 })
 appRouter.patch("/room/savefile",async(req, res)=>{
     const {roomId, filename, content} = req.body;

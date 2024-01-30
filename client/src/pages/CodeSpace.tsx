@@ -104,10 +104,8 @@ function CodeSpace() {
   }
   useEffect(()=>{
     socket.on("participant_join", (roomId:string, username:string, roomParticipants: string[])=>{
-        // console.log(roomParticipants);
         
         if(id==roomId){
-            // setParticipants(prev=>[...prev, username]);
             setParticipants(roomParticipants)
         }
     })
@@ -120,18 +118,13 @@ function CodeSpace() {
         console.log();
         
         if(id==roomId){
-            // setParticipants(prev=>[...prev, username]);
             console.log("this is caclled");
             
             setFiles(prev=>[...prev, fileName]);
         }
     })
-    // const call = setInterval(()=>{
-    //     saveFile();
-    // },7000);
     return ()=>{
         socket.off("file_add");
-        // clearInterval(call);
     }
   }, [])
 
@@ -146,15 +139,10 @@ function CodeSpace() {
           content: editorRef.current?.getValue(),
         });
 
-        if (resp.data.status) {
-          // alert(resp.data.msg);
-        } else {
-          alert(resp.data.msg);
-        }
       } catch (error) {
         console.log("Error in saving file", error);
       }
-    }, 10000); // Adjust the interval as needed
+    }, 20000); // Adjust the interval as needed
 
     return () => clearInterval(intervalId); // Cleanup the interval on component unmount
   }, [currentFile]); // Dependencies for useEffect
@@ -211,7 +199,7 @@ function CodeSpace() {
                     setAddFileName(e.target.value)  
                 }}/>
                 <button className='text-white text-sm bg-red-600 p-1 ml-2 rounded hover:bg-red-700' onClick={handleAddFile}>Add file</button>
-                <button className='text-white text-sm bg-red-600 p-1 ml-2 rounded hover:bg-red-700' onClick={saveFile}>save file</button>
+                <button className='text-white text-sm bg-red-600 p-1 ml-2 rounded hover:bg-red-700' onClick={saveFile}>Save file</button>
                 <div className='h-[250px] overflow-auto'>
                 {files.map((file, ind)=>{
                     return <div key={file+ind} className={`p-1 pl-3 cursor-pointer ${file===currentFile? "bg-file-selected":""} hover:bg-file-bg-hover`}  onClick={()=>handleFileClick(file)}>
@@ -222,9 +210,11 @@ function CodeSpace() {
             </div>
             <div className=''>
                 <span className='text-white'>Participants</span>
+                <br />
+                <span className='text-white'>{"RoomID: "+id}</span>
                 {participants.map((participant, ind)=>{
                     return <div className='border border-blue-500 rounded m-4 p-2' key={participant+ind}>
-                        <p className='text-blue-300'>{(ind+1)+participant}</p>
+                        <p className='text-blue-300'>{(ind+1)+". "+participant}</p>
                     </div>
                 })}
             </div>

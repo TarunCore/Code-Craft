@@ -1,6 +1,7 @@
 import {Room} from "../db/roomSchema.js";
 import mongoose from "mongoose";
-
+import dotenv from 'dotenv';
+dotenv.config();
 export class MongoManager{
     Room;
     constructor(){
@@ -8,8 +9,8 @@ export class MongoManager{
     }
 
     async connect(){
-        await mongoose.connect('mongodb://127.0.0.1:27017/Code', { dbName: "Code-Data" });
-        // mongoose.connect(`mongodb+srv://${username}:${password}@cluster0.random.mongodb.net/`, { dbName: "Code-Data" });
+        // await mongoose.connect('mongodb://127.0.0.1:27017/Code', { dbName: "Code-Data" });
+        await mongoose.connect(`mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.${process.env.DB_ID}.mongodb.net/`, { dbName: "Code-Craft" });
     }
     async disconnect(){
         await mongoose.disconnect();
@@ -56,16 +57,10 @@ export class MongoManager{
     async getCode(roomId, fileName){
         const room = await this.Room.findOne({roomId:roomId});
         if(room){
-            // let content="";
-            // console.log(room.files[11].content);
             for(var i=0;i<room.files.length;i++){
                 if(room.files[i].filename===fileName){
-                    // console.log('wow');
-                    console.log("hey "+room.files[i].content);
-                    
                     return room.files[i].content;
                 }
-                // console.log("hey "+room.files[i].content);
             }
             
         }

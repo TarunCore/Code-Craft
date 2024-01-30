@@ -4,7 +4,6 @@ export class IoManager{
     io;
     roomppl;
     constructor(httpServer){
-        console.log('from iomanager');
         this.roomppl={};
         this.io=new Server(httpServer,{
             cors:{
@@ -22,7 +21,6 @@ export class IoManager{
         })
     }
     joinRoomEmit(roomId, username){
-        console.log('from iomanager');
         if(this.roomppl[roomId]){
             this.roomppl[roomId].push(username);
         }else{
